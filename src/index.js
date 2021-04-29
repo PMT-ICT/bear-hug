@@ -1,5 +1,5 @@
-import Phaser from 'phaser';
-import logoImg from './assets/logo.png';
+const Phaser = require('phaser')
+const logoImg = require('./assets/logo.png')
 
 class MyGame extends Phaser.Scene {
   constructor() {
