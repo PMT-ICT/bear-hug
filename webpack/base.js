@@ -10,7 +10,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules\/(?!embrace-wabbits$)/,
         use: {
           loader: "babel-loader"
         }
