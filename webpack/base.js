@@ -10,18 +10,7 @@ module.exports = {
     publicPath: "/",
     contentBase: path.join(process.cwd(), "dist"),
     historyApiFallback: true,
-    hot: true,
-    host: "0.0.0.0",
-    allowedHosts: [
-      ".repl.it",
-      ".repl.co",
-      ".repl.run"
-    ]
-  },
-  watchOptions: {
-    // ignored: /node_modules/,
-    aggregateTimeout: 300, // After seeing an edit, wait .3 seconds to recompile
-    poll: 500 // Check for edits every 5 seconds
+    hot: true
   },
   module: {
     rules: [
