@@ -8,8 +8,6 @@ module.exports = {
   mode: "development",
   devtool: "eval-source-map",
   devServer: {
-    publicPath: "/",
-    // contentBase: path.join(process.cwd(), "dist"),
     historyApiFallback: true,
     hot: true,
     host: "0.0.0.0",
