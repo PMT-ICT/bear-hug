@@ -8,18 +8,6 @@ module.exports = {
   mode: "development",
   devtool: "eval-source-map",
   devServer: {
-    host: "0.0.0.0",
-
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization",
-      "Access-Control-Expose-Headers": "*"
-    },
-
-    proxy: {
-      '/': 'http://cors-anywhere.herokuapp.com'
-    }
   },
   module: {
     rules: [
