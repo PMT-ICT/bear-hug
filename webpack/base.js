@@ -17,7 +17,9 @@ module.exports = {
       "Access-Control-Expose-Headers": "*"
     },
 
-    sockPort: 'location'
+    proxy: {
+      '/': 'http://cors-anywhere.herokuapp.com'
+    }
   },
   module: {
     rules: [
