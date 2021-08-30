@@ -9,7 +9,7 @@ module.exports = {
   devtool: "eval-source-map",
   devServer: {
     publicPath: "/",
-    contentBase: path.join(process.cwd(), "dist"),
+    // contentBase: path.join(process.cwd(), "dist"),
     historyApiFallback: true,
     hot: true,
     host: "0.0.0.0",
