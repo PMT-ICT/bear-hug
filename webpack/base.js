@@ -7,7 +7,7 @@ module.exports = {
   mode: "development",
   devtool: "eval-source-map",
   devServer: {
-    disableHostCheck: true
+    firewall: false
   },
   module: {
     rules: [
