@@ -8,7 +8,16 @@ module.exports = {
   mode: "development",
   devtool: "eval-source-map",
   devServer: {
-    https: true
+    publicPath: "/",
+    contentBase: path.join(process.cwd(), "dist"),
+    historyApiFallback: true,
+    hot: true,
+    host: "0.0.0.0",
+    allowedHosts: [
+      ".repl.it",
+      ".repl.co",
+      ".repl.run"
+    ]
   },
   module: {
     rules: [
