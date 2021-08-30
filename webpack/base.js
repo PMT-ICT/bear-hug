@@ -8,6 +8,7 @@ module.exports = {
   mode: "development",
   devtool: "eval-source-map",
   devServer: {
+    https: true
   },
   module: {
     rules: [
