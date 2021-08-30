@@ -15,7 +15,9 @@ module.exports = {
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
       "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization",
       "Access-Control-Expose-Headers": "*"
-    }
+    },
+
+    sockPort: 'location'
   },
   module: {
     rules: [
