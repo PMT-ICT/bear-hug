@@ -1,41 +1,46 @@
 const Phaser = require('phaser')
 const logoImg = require('./assets/logo.png')
 
+const rabbitDown = require('./assets/Rabbit_Down.png')
+const rabbitUp = require('./assets/Rabbit_Up.png')
+const rabbitLeft = require('./assets/Rabbit_Left.png')
+const rabbitRight = require('./assets/Rabbit_Right.png')
+const rabbitDead = require('./assets/Rabbit_Dead.png')
+
+const createScene = fn => function() {
+  const bunny = this.add.image(400, 150, 'rabbitDown')
+  
+  console.log(fn())
+}
+
 class MyGame extends Phaser.Scene {
-  constructor() {
+  constructor(fn) {
     super();
+
+    this.create = createScene(fn)
   }
 
   preload() {
     this.load.image('logo', logoImg);
-  }
-
-  create() {
-    const logo = this.add.image(400, 150, 'logo');
-
-    this.tweens.add({
-      targets: logo,
-      y: 450,
-      duration: 2000,
-      ease: "Power2",
-      yoyo: true,
-      loop: -1
-    });
+    this.load.image('rabbitDown', rabbitDown);
+    this.load.image('rabbitUp', rabbitUp);
+    this.load.image('rabbitLeft', rabbitLeft);
+    this.load.image('rabbitRight', rabbitRight);
   }
 }
 
-const config = {
-  type: Phaser.AUTO,
-  parent: 'phaser-example',
-  width: 800,
-  height: 600,
-  scene: MyGame
-};
 
 
 module.exports = {
   launch: fn => {
-    fn()
-    const game = new Phaser.Game(config);
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'phaser-example',
+      width: 800,
+      height: 600,
+      scene: new MyGame(fn)
+    };
+
+    global.game = new Phaser.Game(config);
   }
 }
