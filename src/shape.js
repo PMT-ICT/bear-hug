@@ -1,22 +1,51 @@
 const DEFAULT_COLOUR = '#ffffff'
 
-const circle = (name, x, y, radius, colour = DEFAULT_COLOUR) => ({
-  name,
-  x,
-  y,
-  radius,
-  colour,
-  type: 'circle',
-})
+class Shape {
+  /**
+   * @param {string} type
+   * @param {string} name
+   * @param {number} x
+   * @param {number} y
+   * @param {string} colour
+   */
+  constructor(type, name, x, y, colour) {
+    this.type = type
+    this.name = name
+    this.x = x
+    this.y = y
+    this.colour = colour
+  }
+}
 
-const rectangle = (name, x, y, width, height, colour = DEFAULT_COLOUR) => ({
-  name,
-  x,
-  y,
-  width,
-  height,
-  colour,
-  type: 'rectangle'
-})
+class Circle extends Shape {
+  /**
+   * @param {string} name
+   * @param {number} x
+   * @param {number} y
+   * @param {number} radius
+   * @param {string} colour
+   */
+  constructor(name, x, y, radius, colour = DEFAULT_COLOUR) {
+    super('circle', name, x, y, colour)
+    this.radius = radius
+  }
+}
 
-module.exports = { circle, rectangle }
+class Rectangle extends Shape {
+  /**
+   * @param {string} name
+   * @param {number} x
+   * @param {number} y
+   * @param {number} width
+   * @param {number} height
+   * @param {string} colour
+   */
+  constructor(name, x, y, width, height, colour = DEFAULT_COLOUR) {
+    super('rectangle', name, x, y, colour)
+    this.width = width
+    this.height = height
+  }
+}
+
+
+module.exports = { Circle, Rectangle, Shape }

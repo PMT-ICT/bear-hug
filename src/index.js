@@ -1,30 +1,17 @@
-const Phaser = require('phaser')
-
-const BearHug = require('./game')
+const upUpAndAway = require('./game')
 const entity = require('./entity')
 const shape = require('./shape')
 
-// const createScene = fn => function() {
-//   const bunny = this.add.image(400, 150, 'rabbitDown')
-  
-//   console.log(fn())
-// }
+const MouseButton = {
+  LEFT: 0,
+  MIDDLE: 1,
+  RIGHT: 2
+}
 
 module.exports = {
-  entity,
-  shape,
-
-  upUpAndAway: fns => {
-    const { setup, render } = fns
-
-    const config = { 
-      type: Phaser.AUTO,
-      parent: 'phaser-example',
-      width: 800,
-      height: 600,
-      scene: new BearHug(setup, render)
-    };
-
-    global.game = new Phaser.Game(config);
-  }
+  ...shape,
+  ...entity,
+  upUpAndAway,
+  keyboard: Phaser.Input.Keyboard.KeyCodes,
+  mouse: MouseButton
 }
