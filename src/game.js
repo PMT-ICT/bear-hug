@@ -1,6 +1,6 @@
 const Phaser = require('phaser')
 
-const { Entity } = require('./entity')
+const { Entity, Shape } = require('./entity')
 
 
 /**
@@ -13,6 +13,7 @@ const { Entity } = require('./entity')
  * @typedef {Object} GameState
  * @property {Object.<string, Entity>} entities
  * @property {Scene} scene
+ * @property {Object} bigBurlapSack Container for user-defined state. Anything goes!
  */
 
 
@@ -26,13 +27,6 @@ const { Entity } = require('./entity')
  * @callback render
  * @param {GameState} state
  * @returns {GameState}
- */
-
-
-/**
- * @callback stopWhen
- * @param {GameState} state
- * @returns {boolean}
  */
 
 
@@ -87,7 +81,6 @@ const { Entity } = require('./entity')
  * @typedef {Object} GameFunctions
  * @property {setup} setup
  * @property {render} render
- * @property {stopWhen} stopWhen
  * @property {onKeyDown} onKeyDown
  * @property {onKeyUp} onKeyUp
  * @property {onMouseDown} onMouseDown
@@ -104,7 +97,11 @@ class BearHug extends Phaser.Scene {
     super();
 
     /** @type {GameState} */
-    this.state = undefined
+    this.state = {
+      entities: {},
+      scene: {},
+      bigBurlapSack: {}
+    }
 
     /** @type {Array<GameState>} */
     this.history = []
@@ -141,39 +138,20 @@ class BearHug extends Phaser.Scene {
   }
 
   create() {
-    this.state = this.setup()
+    const initialState = this.setup(this.state)
 
-    if (!this.state) {
-      throw Error('Function "setup" did not return anything.')
-    }
+    this._updateState(initialState, 'setup function')
 
     this.objects.camera = this.cameras.add(0, 0, 800, 600)
 
-    const { entities, scene } = this.state
+    const { entities, scene } = initialState
 
     if (scene.background) {
       this.objects.camera.setBackgroundColor(scene.background)
     }
 
     if (entities) {
-      Object.values(entities).forEach(entity => {
-        const children = entity.shapes.map(shape => {
-          const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
-          const x = shape.x + entity.x
-          const y = shape.y + entity.y
-
-          switch (shape.type) {
-            case 'circle':
-              return this.add.circle(x, y, shape.radius, color)
-            case 'rectangle':
-              return this.add.rectangle(x, y, shape.width, shape.height, color)
-          }
-        })
-
-        this.objects.entities[entity.name] = this.add.container(
-          entity.x, entity.y, children
-        )
-      })
+      Object.values(entities).forEach(entity => this._createEntity(entity))
     }
 
     // setup input handlers
@@ -187,7 +165,7 @@ class BearHug extends Phaser.Scene {
 
       this.input.keyboard.on(event, ({ keyCode }) => {
         const newState = handler(keyCode, this.state)
-        this._updateState(newState)
+        this._updateState(newState, `${event} handler`)
       })
     })
 
@@ -207,7 +185,7 @@ class BearHug extends Phaser.Scene {
 
         const newState = handler(pointer.button, coordinates, this.state)
 
-        this._updateState(newState)
+        this._updateState(newState, `${event} handler`)
       })
     })
   }
@@ -215,22 +193,75 @@ class BearHug extends Phaser.Scene {
   update(time, delta) {
     const entities = this.render(this.state.entities, time, delta)
 
-    Object.entries(entities).forEach(([name, entity]) => {
-      const object = this.objects.entities[name]
+    // Object.entries(entities).forEach(([name, entity]) => {
+      // const object = this.objects.entities[name]
 
-      object.setPosition(entity.x, entity.y)
+      // object.setPosition(entity.x, entity.y)
+    // })
+
+    this._updateState({...this.state, entities}, 'render function')
+  }
+
+  /** @param {Entity} entity */
+  _createEntity(entity) {
+    if (entity.components.length === 0) {
+      return entity.isShape
+        ? this._createShape(entity)
+        : this.add.container(entity.x, entity.y, [])
+    }
+
+    const children = entity.components.map(component => {
+      return this._createEntity(component)
     })
 
-    this._updateState({...this.state, entities})
+    const container = this.add.container(
+      entity.x, 
+      entity.y, 
+      entity.isShape ? [this._createShape(entity), ...children] : children
+    )
+    
+    if (entity.isRoot) {
+      const { width, height } = container.getBounds()
+      container.setSize(width, height)
+      this.physics.world.enable(container)
+  
+      container.body
+        // .setAllowGravity(entity.isFixture)
+        .setCollideWorldBounds(true)
+  
+      this.objects.entities[entity.name] = container
+    }
+
+    return container
+  }
+
+  /**
+   * @param {Shape} shape
+   * @returns {Phaser.GameObjects.GameObject}
+   */
+  _createShape(shape) {
+    console.log(shape)
+    const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
+    const { x, y } = shape
+
+    switch (shape.type) {
+      case 'circle':
+        return this.add.circle(x, y, shape.radius, color)
+          .setDepth(shape.z)
+      case 'rectangle':
+        return this.add.rectangle(x, y, shape.width, shape.height, color)
+          .setDepth(shape.z)
+    }
   }
 
   /**
    * @param {GameState} state
+   * @param {string} source Name to identify the calling function, in case of error.
    */
-  _updateState(state) {
+  _updateState(state, source) {
     if (!state) {
       throw Error(
-        'No state found. Did you forget to return the game state somewhere?'
+        `[${source}]: No state found. Did you forget to return the game state?`
       )
     }
 
@@ -252,7 +283,14 @@ class BearHug extends Phaser.Scene {
     parent: 'phaser-example',
     width: 800,
     height: 600,
-    scene: new BearHug(functions)
+    scene: new BearHug(functions),
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { y: 200 },
+        debug: true
+      }
+    }
   };
 
   global.game = new Phaser.Game(config);
