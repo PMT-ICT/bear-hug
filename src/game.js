@@ -87,6 +87,7 @@ const { Entity, Shape } = require('./entity')
  * @property {onMouseUp} onMouseUp
  */
 
+
 const MAX_HISTORY_SIZE = 30 * 10
 
 class BearHug extends Phaser.Scene {
@@ -202,56 +203,59 @@ class BearHug extends Phaser.Scene {
     this._updateState({...this.state, entities}, 'render function')
   }
 
-  /** @param {Entity} entity */
+  /** 
+   * @param {Entity} entity 
+   */
   _createEntity(entity) {
-    if (entity.components.length === 0) {
-      return entity.isShape
-        ? this._createShape(entity)
-        : this.add.container(entity.x, entity.y, [])
+    const createShape = (shape) => {
+      const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
+      const x = shape.x
+      const y = shape.y
+  
+      switch (shape.type) {
+        case 'circle':
+          return this.add.circle(x, y, shape.radius, color)
+            .setDepth(shape.z)
+            .setAngle(shape.angle)
+        case 'rectangle':
+          return this.add.rectangle(x, y, shape.width, shape.height, color)
+            .setDepth(shape.z)
+            .setAngle(shape.angle)
+      }
     }
 
+    const shape = entity.isShape ? createShape(entity) : undefined
+
+    if (entity.components.length === 0) {
+      return shape || this.add.container(entity.x, entity.y, [])
+    }
+    
     const children = entity.components.map(component => {
       return this._createEntity(component)
     })
 
     const container = this.add.container(
-      entity.x, 
-      entity.y, 
-      entity.isShape ? [this._createShape(entity), ...children] : children
+      entity.x, entity.y, shape ? [shape, ...children] : children
     )
-    
+
     if (entity.isRoot) {
-      const { width, height } = container.getBounds()
-      container.setSize(width, height)
+      const bounds = container.getBounds()
+      container.setSize(bounds.width, bounds.height)
+      
       this.physics.world.enable(container)
-  
-      container.body
-        // .setAllowGravity(entity.isFixture)
+      
+      const xOffset = bounds.x - container.body.x
+      const yOffset = bounds.y - container.body.y
+      
+      container.body.setOffset(xOffset, yOffset)
         .setCollideWorldBounds(true)
+      
+      // container.body.setCollideWorldBounds(true)
   
       this.objects.entities[entity.name] = container
     }
 
     return container
-  }
-
-  /**
-   * @param {Shape} shape
-   * @returns {Phaser.GameObjects.GameObject}
-   */
-  _createShape(shape) {
-    console.log(shape)
-    const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
-    const { x, y } = shape
-
-    switch (shape.type) {
-      case 'circle':
-        return this.add.circle(x, y, shape.radius, color)
-          .setDepth(shape.z)
-      case 'rectangle':
-        return this.add.rectangle(x, y, shape.width, shape.height, color)
-          .setDepth(shape.z)
-    }
   }
 
   /**
@@ -287,7 +291,7 @@ class BearHug extends Phaser.Scene {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 200 },
+        gravity: { y: 0 },
         debug: true
       }
     }
