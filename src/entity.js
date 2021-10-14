@@ -7,6 +7,12 @@ const DEFAULT_COLOUR = '#ffffff'
  */
 
 /**
+ * @typedef {Object} Velocity
+ * @property {number} x
+ * @property {number} y
+ */
+
+/**
  * @typedef {Object} BoundingBox
  * @property {Point} topLeft
  * @property {Point} bottomRight
@@ -25,6 +31,7 @@ class Entity {
     this.x = x
     this.y = y
     this.z = 0
+    this.velocity = { x: 0, y: 0 }
     this.components = components
     this.angle = angle
     this.isRoot = true
@@ -35,7 +42,6 @@ class Entity {
       c.isRoot = false
       c.incrementZ()
     })
-    
   }
 
   incrementZ() {
