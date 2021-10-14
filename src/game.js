@@ -148,9 +148,7 @@ class BearHug extends Phaser.Scene {
 
     this._updateState(initialState, 'setup function')
 
-    console.log(this.gameScale)
-    const { width, height } = this.gameScale.game.config
-    this.objects.camera = this.cameras.add(0, 0, width, height)
+    this.objects.camera = this.cameras.add(0, 0, 800, 600)
 
     const { entities, scene } = initialState
 
@@ -373,12 +371,12 @@ class BearHug extends Phaser.Scene {
         gravity: { y: 200 },
       }
     },
-    plugins: {
-      global: [{
-        key: 'GameScalePlugin',
-        plugin: GameScalePlugin,
-        mapping: 'gameScale'
-      }]
+    scale: {
+      mode: Phaser.Scale.FIT,
+      parent: 'phaser-example',
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      width: 800,
+      height: 600
     }
   };
 
