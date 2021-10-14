@@ -2,6 +2,8 @@ const Phaser = require('phaser')
 
 const { Entity, Shape } = require('./entity')
 
+const _ = require('lodash')
+
 
 /**
  * @typedef {Object} Scene
@@ -24,8 +26,10 @@ const { Entity, Shape } = require('./entity')
 
 
 /**
- * @callback render
+ * @callback update
  * @param {GameState} state
+ * @param {number} time
+ * @param {number} delta
  * @returns {GameState}
  */
 
@@ -80,7 +84,7 @@ const { Entity, Shape } = require('./entity')
 /**
  * @typedef {Object} GameFunctions
  * @property {setup} setup
- * @property {render} render
+ * @property {update} update
  * @property {onKeyDown} onKeyDown
  * @property {onKeyUp} onKeyUp
  * @property {onMouseDown} onMouseDown
@@ -108,7 +112,7 @@ class BearHug extends Phaser.Scene {
     this.history = []
 
     this.setup = functions.setup
-    this.render = functions.render
+    this.onUpdate = functions.update
     this.stopWhen = functions.stopWhen
     this.onKeyDown = functions.onKeyDown
     this.onKeyUp = functions.onKeyUp
@@ -152,7 +156,9 @@ class BearHug extends Phaser.Scene {
     }
 
     if (entities) {
-      Object.values(entities).forEach(entity => this._createEntity(entity))
+      Object.entries(entities).forEach(([name, entity]) => {
+        this._createEntity(name, entity)
+      })
     }
 
     // setup input handlers
@@ -192,21 +198,82 @@ class BearHug extends Phaser.Scene {
   }
 
   update(time, delta) {
-    const entities = this.render(this.state.entities, time, delta)
+    // first, gather any changes in game object state and update entity
+    // state to match
+    const updatedEntities = Object.fromEntries(
+      Object
+        .entries(this.state.entities)
+        .map(([name, entity]) => {
+          const object = this.objects.entities[name]
 
-    // Object.entries(entities).forEach(([name, entity]) => {
-      // const object = this.objects.entities[name]
+          return [name, this._updateEntity(entity, object)]
+      })
+    )
 
-      // object.setPosition(entity.x, entity.y)
-    // })
+    this._updateState(
+      {...this.state, entities: updatedEntities}, 
+      'update function - start'
+    )
 
-    this._updateState({...this.state, entities}, 'render function')
+    // next, call the user's update function to get the changed state
+    const state = this.onUpdate(this.state, time, delta)
+
+    // finally, update state again with the user's updates
+    this._updateState(state, 'update function')
+  }
+
+  /**
+   * @param {Phaser.GameObjects.GameObject} object
+   * @param {Entity} entity
+   */
+  _updateObject(object, { x, y, velocity, angle }) {
+    const positionChanged = object.x != x || object.y != y
+    
+    if (positionChanged) {
+      object.setPosition(x, y)
+    }
+
+    const xVelocityChanged = object.body.velocity.x != velocity.x
+
+    if (xVelocityChanged) {
+      object.body.setVelocityX(velocity.x)
+    }
+    
+    const yVelocityChanged = object.body.velocity.y != velocity.y
+
+    if (yVelocityChanged) {
+      object.body.setVelocityY(velocity.y)
+    }
+
+    const angleChanged = object.angle != angle
+
+    if (angleChanged) {
+      object.setAngle(angle)
+    }
+  }
+
+  /**
+   * @param {Entity} entity
+   * @param {Phaser.GameObjects.GameObject} object
+   */
+  _updateEntity(entity, object) {
+    const clone = _.cloneDeep(entity)
+
+    clone.x = object.x
+    clone.y = object.y
+    clone.velocity = {
+      x: object.body.velocity.x,
+      y: object.body.velocity.y
+    }
+
+    return clone
   }
 
   /** 
+   * @param {string} name
    * @param {Entity} entity 
    */
-  _createEntity(entity) {
+  _createEntity(name, entity) {
     const createShape = (shape) => {
       const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
       const x = shape.x
@@ -231,7 +298,7 @@ class BearHug extends Phaser.Scene {
     }
     
     const children = entity.components.map(component => {
-      return this._createEntity(component)
+      return this._createEntity(component.name, component)
     })
 
     const container = this.add.container(
@@ -247,12 +314,12 @@ class BearHug extends Phaser.Scene {
       const xOffset = bounds.x - container.body.x
       const yOffset = bounds.y - container.body.y
       
-      container.body.setOffset(xOffset, yOffset)
+      container.body
+        .setOffset(xOffset, yOffset)
         .setCollideWorldBounds(true)
+        .setAllowGravity(true)
       
-      // container.body.setCollideWorldBounds(true)
-  
-      this.objects.entities[entity.name] = container
+      this.objects.entities[name] = container
     }
 
     return container
@@ -271,6 +338,15 @@ class BearHug extends Phaser.Scene {
 
     this.state = state
     this.history.push(state)
+    
+    // reflect state change in game objects
+    Object.entries(state.entities).forEach(([name, entity]) => {
+      const object = this.objects.entities[name]
+
+      if (object) {
+        this._updateObject(object, entity)
+      }
+    })
 
     if (this.history.length > MAX_HISTORY_SIZE) {
       this.history.shift()
@@ -280,8 +356,9 @@ class BearHug extends Phaser.Scene {
 
 /**
  * @param {GameFunctions} functions
+ * @param {boolean} debug
  */
- const upUpAndAway = functions => {
+ const upUpAndAway = (functions, debug=false) => {
   const config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
@@ -291,8 +368,8 @@ class BearHug extends Phaser.Scene {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 0 },
-        debug: true
+        debug,
+        gravity: { y: 200 },
       }
     }
   };
