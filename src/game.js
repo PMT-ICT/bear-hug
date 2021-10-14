@@ -1,9 +1,10 @@
 const Phaser = require('phaser')
-
-const { Entity, Shape } = require('./entity')
-
+const GameScalePlugin = require('phaser-plugin-game-scale')
 const _ = require('lodash')
 
+
+
+const { Entity, Shape } = require('./entity')
 
 /**
  * @typedef {Object} Scene
@@ -147,7 +148,9 @@ class BearHug extends Phaser.Scene {
 
     this._updateState(initialState, 'setup function')
 
-    this.objects.camera = this.cameras.add(0, 0, 800, 600)
+    console.log(this.gameScale)
+    const { width, height } = this.gameScale.game.config
+    this.objects.camera = this.cameras.add(0, 0, width, height)
 
     const { entities, scene } = initialState
 
@@ -362,8 +365,6 @@ class BearHug extends Phaser.Scene {
   const config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
-    width: 800,
-    height: 600,
     scene: new BearHug(functions),
     physics: {
       default: 'arcade',
@@ -371,6 +372,13 @@ class BearHug extends Phaser.Scene {
         debug,
         gravity: { y: 200 },
       }
+    },
+    plugins: {
+      global: [{
+        key: 'GameScalePlugin',
+        plugin: GameScalePlugin,
+        mapping: 'gameScale'
+      }]
     }
   };
 
