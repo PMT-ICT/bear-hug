@@ -147,8 +147,7 @@ class BearHug extends Phaser.Scene {
     const initialState = this.setup(this.state)
 
     this._updateState(initialState, 'setup function')
-
-    this.objects.camera = this.cameras.add(0, 0, 800, 600)
+    this.objects.camera = this.cameras.add(0, 0, window.innerWidth, window.innerHeight)
 
     const { entities, scene } = initialState
 
@@ -374,9 +373,9 @@ class BearHug extends Phaser.Scene {
     scale: {
       mode: Phaser.Scale.FIT,
       parent: 'phaser-example',
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: 800,
-      height: 600
+      autoCenter: Phaser.Scale.NO_CENTER,
+      width: window.innerWidth,
+      height: window.innerHeight
     }
   };
 

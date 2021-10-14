@@ -46,7 +46,7 @@ module.exports = {
         <head>
           <meta charset="utf-8">
         </head>
-        <body></body>
+        <body style="margin: 0;"></body>
       </html>
       `
     })
