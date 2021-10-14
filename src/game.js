@@ -373,6 +373,8 @@ class BearHug extends Phaser.Scene {
         gravity: { y: 200 },
       }
     },
+    width: 800,
+    height: 600,
     plugins: {
       global: [{
         key: 'GameScalePlugin',
