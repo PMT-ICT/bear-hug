@@ -1,6 +1,6 @@
 {
   "name": "embrace-wabbits",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Wabbits!",
   "main": "src/index.js",
   "scripts": {
