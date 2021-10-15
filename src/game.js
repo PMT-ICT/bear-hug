@@ -1,8 +1,5 @@
 const Phaser = require('phaser')
-const GameScalePlugin = require('phaser-plugin-game-scale')
 const _ = require('lodash')
-
-
 
 const { Entity, Shape } = require('./entity')
 
@@ -132,13 +129,13 @@ class BearHug extends Phaser.Scene {
 
     const rabbitUp = require('./assets/Rabbit_Up.png')
     this.load.image('rabbitUp', rabbitUp)
-    
+
     const rabbitLeft = require('./assets/Rabbit_Left.png')
     this.load.image('rabbitLeft', rabbitLeft)
-    
+
     const rabbitRight = require('./assets/Rabbit_Right.png')
     this.load.image('rabbitRight', rabbitRight)
-    
+
     const rabbitDead = require('./assets/Rabbit_Dead.png')
     this.load.image('rabbitDead', rabbitDead)
   }
@@ -152,7 +149,7 @@ class BearHug extends Phaser.Scene {
       0, 0, window.innerWidth, window.innerHeight
     )
 
-    this.scale.on('resize', function({ width, height }) {
+    this.scale.on('resize', function ({ width, height }) {
       this.cameras.resize(width, height)
     }, this)
 
@@ -214,11 +211,11 @@ class BearHug extends Phaser.Scene {
           const object = this.objects.entities[name]
 
           return [name, this._updateEntity(entity, object)]
-      })
+        })
     )
 
     this._updateState(
-      {...this.state, entities: updatedEntities}, 
+      { ...this.state, entities: updatedEntities },
       'update function - start'
     )
 
@@ -235,7 +232,7 @@ class BearHug extends Phaser.Scene {
    */
   _updateObject(object, { x, y, velocity, angle }) {
     const positionChanged = object.x != x || object.y != y
-    
+
     if (positionChanged) {
       object.setPosition(x, y)
     }
@@ -245,7 +242,7 @@ class BearHug extends Phaser.Scene {
     if (xVelocityChanged) {
       object.body.setVelocityX(velocity.x)
     }
-    
+
     const yVelocityChanged = object.body.velocity.y != velocity.y
 
     if (yVelocityChanged) {
@@ -285,7 +282,7 @@ class BearHug extends Phaser.Scene {
       const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
       const x = shape.x
       const y = shape.y
-  
+
       switch (shape.type) {
         case 'circle':
           return this.add.circle(x, y, shape.radius, color)
@@ -303,7 +300,7 @@ class BearHug extends Phaser.Scene {
     if (entity.components.length === 0) {
       return shape || this.add.container(entity.x, entity.y, [])
     }
-    
+
     const children = entity.components.map(component => {
       return this._createEntity(component.name, component)
     })
@@ -315,17 +312,17 @@ class BearHug extends Phaser.Scene {
     if (entity.isRoot) {
       const bounds = container.getBounds()
       container.setSize(bounds.width, bounds.height)
-      
+
       this.physics.world.enable(container)
-      
+
       const xOffset = bounds.x - container.body.x
       const yOffset = bounds.y - container.body.y
-      
+
       container.body
         .setOffset(xOffset, yOffset)
         .setCollideWorldBounds(true)
         .setAllowGravity(true)
-      
+
       this.objects.entities[name] = container
     }
 
@@ -345,7 +342,7 @@ class BearHug extends Phaser.Scene {
 
     this.state = state
     this.history.push(state)
-    
+
     // reflect state change in game objects
     Object.entries(state.entities).forEach(([name, entity]) => {
       const object = this.objects.entities[name]
@@ -365,7 +362,7 @@ class BearHug extends Phaser.Scene {
  * @param {GameFunctions} functions
  * @param {boolean} debug
  */
- const upUpAndAway = (functions, debug=false) => {
+const upUpAndAway = (functions, debug = false) => {
   const config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
