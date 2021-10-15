@@ -1,7 +1,7 @@
 {
-  "name": "embrace-wabbits",
-  "version": "1.0.4",
-  "description": "Wabbits!",
+  "name": "bear-hug",
+  "version": "1.0.5",
+  "description": "<3",
   "main": "src/index.js",
   "scripts": {
     "build": "webpack --config webpack/prod.js ",
