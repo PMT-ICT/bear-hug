@@ -1,6 +1,7 @@
 const upUpAndAway = require('./game')
 const entity = require('./entity')
 const colour = require('./colour')
+const Phaser = require('phaser')
 
 const MouseButton = {
   LEFT: 0,
