@@ -46,7 +46,7 @@ module.exports = {
         <head>
           <meta charset="utf-8">
         </head>
-        <body style="margin: 0;"></body>
+        <body style="margin: 0; overflow: hidden;"></body>
       </html>
       `
     })

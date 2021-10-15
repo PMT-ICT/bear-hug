@@ -147,7 +147,14 @@ class BearHug extends Phaser.Scene {
     const initialState = this.setup(this.state)
 
     this._updateState(initialState, 'setup function')
-    this.objects.camera = this.cameras.add(0, 0, window.innerWidth, window.innerHeight)
+
+    this.objects.camera = this.cameras.add(
+      0, 0, window.innerWidth, window.innerHeight
+    )
+
+    this.scale.on('resize', function({ width, height }) {
+      this.cameras.resize(width, height)
+    }, this)
 
     const { entities, scene } = initialState
 
@@ -371,15 +378,18 @@ class BearHug extends Phaser.Scene {
       }
     },
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.NONE,
       parent: 'phaser-example',
-      autoCenter: Phaser.Scale.NO_CENTER,
       width: window.innerWidth,
       height: window.innerHeight
     }
   };
 
-  global.game = new Phaser.Game(config);
+  global.game = new Phaser.Game(config)
+
+  window.addEventListener('resize', function () {
+    global.game.scale.resize(window.innerWidth, window.innerHeight)
+  }, false)
 }
 
 module.exports = upUpAndAway
