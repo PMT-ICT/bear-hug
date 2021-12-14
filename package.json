@@ -26,7 +26,10 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
+    "core-js": "^3.19.3",
+    "immer": "^9.0.7",
     "lodash": "^4.17.21",
-    "phaser": "^3.50.0"
+    "phaser": "^3.50.0",
+    "regenerator-runtime": "^0.13.9"
   }
 }
