@@ -1,18 +1,15 @@
-const upUpAndAway = require('./game')
-const entity = require('./entity')
-const colour = require('./colour')
-const Phaser = require('phaser')
+import Phaser from 'phaser'
 
-const MouseButton = {
+export * from './colour'
+export * from './game'
+export * from './text'
+
+export const Mouse = {
   LEFT: 0,
   MIDDLE: 1,
   RIGHT: 2
 }
 
-module.exports = {
-  ...entity,
-  colour,
-  upUpAndAway,
-  keyboard: Phaser.Input.Keyboard.KeyCodes,
-  mouse: MouseButton
-}
+export * from './entity'
+
+export const keyboard = Phaser.Input.Keyboard.KeyCodes
