@@ -1,7 +1,10 @@
-const Phaser = require('phaser')
-const _ = require('lodash')
+import { immerable, produce, setAutoFreeze } from 'immer'
+import { cond, pipe } from 'lodash/fp'
+import Phaser from 'phaser'
 
-const { Entity, Shape } = require('./entity')
+import { Entity, Shape } from './entity'
+import { otherwise } from './funfunfun'
+import { Text } from './text'
 
 /**
  * @typedef {Object} Scene
@@ -123,21 +126,13 @@ class BearHug extends Phaser.Scene {
     }
   }
 
+  init() {
+    // disable Immer's autofreeze - so objects can still be mutated by consumer
+    setAutoFreeze(false)
+  }
+
   preload() {
-    const rabbitDown = require('./assets/Rabbit_Down.png')
-    this.load.image('rabbitDown', rabbitDown)
-
-    const rabbitUp = require('./assets/Rabbit_Up.png')
-    this.load.image('rabbitUp', rabbitUp)
-
-    const rabbitLeft = require('./assets/Rabbit_Left.png')
-    this.load.image('rabbitLeft', rabbitLeft)
-
-    const rabbitRight = require('./assets/Rabbit_Right.png')
-    this.load.image('rabbitRight', rabbitRight)
-
-    const rabbitDead = require('./assets/Rabbit_Dead.png')
-    this.load.image('rabbitDead', rabbitDead)
+    // any assets that need to be preloaded go here
   }
 
   create() {
@@ -230,30 +225,33 @@ class BearHug extends Phaser.Scene {
    * @param {Phaser.GameObjects.GameObject} object
    * @param {Entity} entity
    */
-  _updateObject(object, { x, y, velocity, angle }) {
-    const positionChanged = object.x != x || object.y != y
+  _updateObject(object, entity) {
+    const updatePosition = object => object.setPosition(entity.x, entity.y)
 
-    if (positionChanged) {
-      object.setPosition(x, y)
+    /** @param {Phaser.GameObjects.GameObject} object */
+    const updateVelocity = object => {
+      if (object.body) {
+        object.body.setVelocityX(entity.velocity.x)
+          .setVelocityY(entity.velocity.y)
+      }
+
+      return object
     }
 
-    const xVelocityChanged = object.body.velocity.x != velocity.x
+    const updateAngle = object => object.setAngle(entity.angle) 
 
-    if (xVelocityChanged) {
-      object.body.setVelocityX(velocity.x)
-    }
+    const updateText = object => entity instanceof Text
+      ? object.setText(entity.content)
+      : object
 
-    const yVelocityChanged = object.body.velocity.y != velocity.y
+    const update = pipe(
+      updatePosition, 
+      updateVelocity, 
+      updateAngle, 
+      updateText
+    )
 
-    if (yVelocityChanged) {
-      object.body.setVelocityY(velocity.y)
-    }
-
-    const angleChanged = object.angle != angle
-
-    if (angleChanged) {
-      object.setAngle(angle)
-    }
+    update(object)
   }
 
   /**
@@ -261,14 +259,17 @@ class BearHug extends Phaser.Scene {
    * @param {Phaser.GameObjects.GameObject} object
    */
   _updateEntity(entity, object) {
-    const clone = _.cloneDeep(entity)
+    const clone = produce(entity, draft => {
+      draft.x = object.x
+      draft.y = object.y
 
-    clone.x = object.x
-    clone.y = object.y
-    clone.velocity = {
-      x: object.body.velocity.x,
-      y: object.body.velocity.y
-    }
+      if (object.body) {
+        draft.velocity = {
+          x: object.body.velocity.x,
+          y: object.body.velocity.y
+        }
+      }
+    })
 
     return clone
   }
@@ -278,50 +279,68 @@ class BearHug extends Phaser.Scene {
    * @param {Entity} entity 
    */
   _createEntity(name, entity) {
-    const createShape = (shape) => {
-      const { color } = Phaser.Display.Color.ValueToColor(shape.colour)
-      const x = shape.x
-      const y = shape.y
+    const createContainer = (object = null) => {
+      if (object && entity.components.length === 0) {
+        return object
+      }
 
-      switch (shape.type) {
+      const children = entity.components.length > 0
+        ? entity.components.map(c => this._createEntity(c.name, c))
+        : []
+
+      return this.add.container(
+        entity.x, entity.y, object ? [object, ...children] : children
+      )
+    }
+
+    const createShape = () => {
+      const { color } = Phaser.Display.Color.ValueToColor(entity.colour)
+      const x = entity.x
+      const y = entity.y
+
+      switch (entity.classification) {
         case 'circle':
-          return this.add.circle(x, y, shape.radius, color)
-            .setDepth(shape.z)
-            .setAngle(shape.angle)
+          return this.add.circle(x, y, entity.radius, color)
+            .setDepth(entity.z)
+            .setAngle(entity.angle)
         case 'rectangle':
-          return this.add.rectangle(x, y, shape.width, shape.height, color)
-            .setDepth(shape.z)
-            .setAngle(shape.angle)
+          return this.add.rectangle(x, y, entity.width, entity.height, color)
+            .setDepth(entity.z)
+            .setAngle(entity.angle)
       }
     }
 
-    const shape = entity.isShape ? createShape(entity) : undefined
-
-    if (entity.components.length === 0) {
-      return shape || this.add.container(entity.x, entity.y, [])
+    const createText = () => {
+      return this.add.text(entity.x, entity.x, entity.content, {
+        fontFamily: entity.fontFamily,
+        fontSize: entity.fontSize,
+        color: entity.colour
+      })
     }
 
-    const children = entity.components.map(component => {
-      return this._createEntity(component.name, component)
-    })
+    const createObject = cond([
+      [entity => entity instanceof Shape, createShape],
+      [entity => entity instanceof Text, createText],
+      [otherwise, () => null]
+    ])
 
-    const container = this.add.container(
-      entity.x, entity.y, shape ? [shape, ...children] : children
-    )
-
+    const container = pipe(createObject, createContainer)(entity)
+          
     if (entity.isRoot) {
-      const bounds = container.getBounds()
-      container.setSize(bounds.width, bounds.height)
-
-      this.physics.world.enable(container)
-
-      const xOffset = bounds.x - container.body.x
-      const yOffset = bounds.y - container.body.y
-
-      container.body
-        .setOffset(xOffset, yOffset)
-        .setCollideWorldBounds(true)
-        .setAllowGravity(true)
+      if (!entity.isStatic) {
+        const bounds = container.getBounds()
+        container.setSize(bounds.width, bounds.height)
+        
+        this.physics.world.enable(container)
+        
+        const xOffset = bounds.x - container.body.x
+        const yOffset = bounds.y - container.body.y
+        
+        container.body
+          .setOffset(xOffset, yOffset)
+          .setCollideWorldBounds(true)
+          .setAllowGravity(true)
+      }
 
       this.objects.entities[name] = container
     }
@@ -362,7 +381,7 @@ class BearHug extends Phaser.Scene {
  * @param {GameFunctions} functions
  * @param {boolean} debug
  */
-const upUpAndAway = (functions, debug = false) => {
+export const upUpAndAway = (functions, debug = false) => {
   const config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
@@ -388,5 +407,3 @@ const upUpAndAway = (functions, debug = false) => {
     global.game.scale.resize(window.innerWidth, window.innerHeight)
   }, false)
 }
-
-module.exports = upUpAndAway
