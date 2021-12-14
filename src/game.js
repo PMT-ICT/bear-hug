@@ -381,7 +381,7 @@ class BearHug extends Phaser.Scene {
  * @param {GameFunctions} functions
  * @param {boolean} debug
  */
-export const upUpAndAway = (functions, debug = false) => {
+export const commence = (functions, debug = false) => {
   const config = {
     type: Phaser.AUTO,
     parent: 'phaser-example',
