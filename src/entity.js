@@ -21,8 +21,6 @@ const DEFAULT_COLOUR = '#ffffff'
  */
 
 export class Entity {
-  [immerable] = true
-  
   /**
    * @param {string} name
    * @param {number} x
@@ -33,6 +31,8 @@ export class Entity {
    * @param {('container' |'shape' | 'text')} type
    */
   constructor(name, x, y, components, isStatic, type = 'container', angle = 0) {
+    this[immerable] = true
+
     this.type = type
     this.name = name
     this.x = x
