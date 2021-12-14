@@ -1,4 +1,4 @@
-import { immerable, produce, setAutoFreeze } from 'immer'
+import { enableES5, immerable, produce, setAutoFreeze } from 'immer'
 import { cond, pipe } from 'lodash/fp'
 import Phaser from 'phaser'
 
@@ -129,6 +129,9 @@ class BearHug extends Phaser.Scene {
   init() {
     // disable Immer's autofreeze - so objects can still be mutated by consumer
     setAutoFreeze(false)
+    
+    // enable ES5 support
+    enableES5()
   }
 
   preload() {
