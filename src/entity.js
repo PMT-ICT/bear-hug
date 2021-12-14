@@ -1,3 +1,5 @@
+import { immerable } from "immer"
+
 const DEFAULT_COLOUR = '#ffffff'
 
 /**
@@ -18,25 +20,30 @@ const DEFAULT_COLOUR = '#ffffff'
  * @property {Point} bottomRight
  */
 
-class Entity {
+export class Entity {
+  [immerable] = true
+  
   /**
    * @param {string} name
    * @param {number} x
    * @param {number} y
    * @param {Array<Entity>} components
+   * @param {boolean} isStatic
    * @param {number} angle
+   * @param {('container' |'shape' | 'text')} type
    */
-  constructor(name, x, y, components, angle = 0) {
+  constructor(name, x, y, components, isStatic, type = 'container', angle = 0) {
+    this.type = type
     this.name = name
     this.x = x
     this.y = y
     this.z = 0
-    this.velocity = { x: 0, y: 0 }
     this.components = components
     this.angle = angle
+    this.velocity = { x: 0, y: 0 }
+    this.isStatic = isStatic
     this.isRoot = true
-    this.isShape = false
-    
+
     // FIXME: elegant solution possible?
     components.forEach(c => {
       c.isRoot = false
@@ -50,20 +57,19 @@ class Entity {
   }
 }
 
-class Shape extends Entity {
+export class Shape extends Entity {
   /**
-   * @param {string} type
+   * @param {string} classification
    * @param {string} colour
    */
-  constructor(type, name, x, y, colour, components = [], angle = 0) {
-    super(name, x, y, components, angle)
-    this.type = type
+  constructor(classification, name, x, y, colour, components, isStatic, angle = 0) {
+    super(name, x, y, components, isStatic, 'shape', angle)
+    this.classification = classification
     this.colour = colour
-    this.isShape = true
   }
 }
 
-class Circle extends Shape {
+export class Circle extends Shape {
   /**
    * @param {string} name
    * @param {number} x
@@ -72,14 +78,14 @@ class Circle extends Shape {
    * @param {string} colour
    */
   constructor(
-    name, x, y, radius, colour = DEFAULT_COLOUR, components = []
+    name, x, y, radius, colour = DEFAULT_COLOUR, components = [], isStatic = false
   ) {
-    super('circle', name, x, y, colour, components)
+    super('circle', name, x, y, colour, components, isStatic)
     this.radius = radius
   }
 }
 
-class Rectangle extends Shape {
+export class Rectangle extends Shape {
   /**
    * @param {string} name
    * @param {number} x
@@ -90,19 +96,18 @@ class Rectangle extends Shape {
    * @param {string} colour
    */
   constructor(
-    name, 
-    x, 
-    y, 
-    width, 
-    height, 
-    colour = DEFAULT_COLOUR, 
+    name,
+    x,
+    y,
+    width,
+    height,
+    colour = DEFAULT_COLOUR,
     components = [],
-    angle = 0
+    angle = 0,
+    isStatic = false
   ) {
-    super('rectangle', name, x, y, colour, components, angle)
+    super('rectangle', name, x, y, colour, components, isStatic, angle)
     this.width = width
     this.height = height
   }
 }
-
-module.exports = { Entity, Shape, Rectangle, Circle }
