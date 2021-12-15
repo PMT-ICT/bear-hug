@@ -45,41 +45,9 @@ module.exports = {
       <!DOCTYPE html>
       <html>
         <head>
-          <style media='screen' type='text/css'>
-            @font-face {
-              font-family: Minecraft;
-              src: url('assets/fonts/minecraft/Minecraft.ttf');
-            }
-
-            @font-face {
-              font-family: Gothic Pixels;
-              src: url('assets/fonts/gothicpixels/GothicPixels.ttf');
-            }
-
-            @font-face {
-              font-family: Edit Undo Line;
-              src: url('assets/fonts/edit_undo_line/edunline.ttf');
-            }
-
-            @font-face {
-              font-family: Monster Friend Fore;
-              src: url('assets/fonts/monster_friend_fore/MonsterFriendFore.otf');
-            }
-
-            @font-face {
-              font-family: Gypsy Curse;
-              src: url('assets/fonts/gypsy_curse/GypsyCurse.ttf');
-            }
-          </style>
           <meta charset="utf-8">
         </head>
-        <body style="margin: 0; overflow: hidden;">
-          <div style="font-family:Minecraft; position:absolute; left:-1000px; visibility:hidden;">.</div>
-          <div style="font-family:Gothic Pixels; position:absolute; left:-1000px; visibility:hidden;">.</div>
-          <div style="font-family:Edit Undo Line; position:absolute; left:-1000px; visibility:hidden;">.</div>
-          <div style="font-family:Monster Friend Fore; position:absolute; left:-1000px; visibility:hidden;">.</div>
-          <div style="font-family:Gypsy Curse; position:absolute; left:-1000px; visibility:hidden;">.</div>
-        </body>
+        <body style="margin: 0; overflow: hidden;"></body>
       </html>
       `
     })

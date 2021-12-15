@@ -129,7 +129,7 @@ class BearHug extends Phaser.Scene {
   init() {
     // disable Immer's autofreeze - so objects can still be mutated by consumer
     setAutoFreeze(false)
-    
+
     // enable ES5 support
     enableES5()
   }
@@ -241,16 +241,16 @@ class BearHug extends Phaser.Scene {
       return object
     }
 
-    const updateAngle = object => object.setAngle(entity.angle) 
+    const updateAngle = object => object.setAngle(entity.angle)
 
     const updateText = object => entity instanceof Text
       ? object.setText(entity.content)
       : object
 
     const update = pipe(
-      updatePosition, 
-      updateVelocity, 
-      updateAngle, 
+      updatePosition,
+      updateVelocity,
+      updateAngle,
       updateText
     )
 
@@ -328,17 +328,17 @@ class BearHug extends Phaser.Scene {
     ])
 
     const container = pipe(createObject, createContainer)(entity)
-          
+
     if (entity.isRoot) {
       if (!entity.isStatic) {
         const bounds = container.getBounds()
         container.setSize(bounds.width, bounds.height)
-        
+
         this.physics.world.enable(container)
-        
+
         const xOffset = bounds.x - container.body.x
         const yOffset = bounds.y - container.body.y
-        
+
         container.body
           .setOffset(xOffset, yOffset)
           .setCollideWorldBounds(true)
@@ -380,33 +380,55 @@ class BearHug extends Phaser.Scene {
   }
 }
 
+const loadFonts = async () => {
+  const loadFont = async (name, url) => {
+    const font = new FontFace(name, `url(${url})`)
+    const loadedFont = await font.load()
+
+    document.fonts.add(loadedFont)
+  }
+
+  const fonts = [
+    ['Minecraft', 'minecraft/Minecraft.ttf'],
+    ['Edit Undo Line', 'edit_undo_line/edunline.ttf'],
+    ['Monster Friend Fore', 'monster_friend_fore/MonsterFriendFore.otf'],
+    ['Gypsy Curse', 'gypsy_curse/GypsyCurse.ttf']
+  ]
+
+  await Promise.all(
+    fonts.map(([name, path]) => loadFont(name, `assets/fonts/${path}`))
+  )
+}
+
 /**
  * @param {GameFunctions} functions
  * @param {boolean} debug
  */
 export const commence = (functions, debug = false) => {
-  const config = {
-    type: Phaser.AUTO,
-    parent: 'phaser-example',
-    scene: new BearHug(functions),
-    physics: {
-      default: 'arcade',
-      arcade: {
-        debug,
-        gravity: { y: 200 },
-      }
-    },
-    scale: {
-      mode: Phaser.Scale.NONE,
+  loadFonts().then(() => {
+    const config = {
+      type: Phaser.AUTO,
       parent: 'phaser-example',
-      width: window.innerWidth,
-      height: window.innerHeight
-    }
-  };
+      scene: new BearHug(functions),
+      physics: {
+        default: 'arcade',
+        arcade: {
+          debug,
+          gravity: { y: 200 },
+        }
+      },
+      scale: {
+        mode: Phaser.Scale.NONE,
+        parent: 'phaser-example',
+        width: window.innerWidth,
+        height: window.innerHeight
+      }
+    };
 
-  global.game = new Phaser.Game(config)
+    global.game = new Phaser.Game(config)
 
-  window.addEventListener('resize', function () {
-    global.game.scale.resize(window.innerWidth, window.innerHeight)
-  }, false)
+    window.addEventListener('resize', function () {
+      global.game.scale.resize(window.innerWidth, window.innerHeight)
+    }, false)
+  })
 }
