@@ -314,7 +314,7 @@ class BearHug extends Phaser.Scene {
     }
 
     const createText = () => {
-      return this.add.text(entity.x, entity.x, entity.content, {
+      return this.add.text(entity.x, entity.y, entity.content, {
         fontFamily: entity.fontFamily,
         fontSize: entity.fontSize,
         color: entity.colour
