@@ -1,6 +1,7 @@
 import { enableES5, immerable, produce, setAutoFreeze } from 'immer'
 import { cond, pipe } from 'lodash/fp'
 import Phaser from 'phaser'
+import { Font } from '.'
 
 import { Entity, Shape } from './entity'
 import { otherwise } from './funfunfun'
@@ -389,10 +390,11 @@ const loadFonts = async () => {
   }
 
   const fonts = [
-    ['Minecraft', 'minecraft/Minecraft.ttf'],
-    ['Edit Undo Line', 'edit_undo_line/edunline.ttf'],
-    ['Monster Friend Fore', 'monster_friend_fore/MonsterFriendFore.otf'],
-    ['Gypsy Curse', 'gypsy_curse/GypsyCurse.ttf']
+    [Font.MINECRAFT, 'minecraft/Minecraft.ttf'],
+    [Font.GOTHIC_PIXELS, 'gothic_pixels/GothicPixels.ttf'],
+    [Font.EDIT_UNDO_LINE, 'edit_undo_line/edunline.ttf'],
+    [Font.MONSTER_FRIEND_FORE, 'monster_friend_fore/MonsterFriendFore.otf'],
+    [Font.GYPSY_CURSE, 'gypsy_curse/GypsyCurse.ttf']
   ]
 
   await Promise.all(
