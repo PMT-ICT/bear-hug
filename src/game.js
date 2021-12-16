@@ -1,5 +1,5 @@
-import { enableES5, immerable, produce, setAutoFreeze } from 'immer'
-import { cond, pipe } from 'lodash/fp'
+import { enableES5, produce, setAutoFreeze } from 'immer'
+import { cond, partition, pickBy, pipe } from 'lodash/fp'
 import Phaser from 'phaser'
 import { Font } from '.'
 
@@ -155,17 +155,13 @@ class BearHug extends Phaser.Scene {
       this.cameras.resize(width, height)
     }, this)
 
-    const { entities, scene } = initialState
+    const { scene } = initialState
 
     if (scene.background) {
       this.objects.camera.setBackgroundColor(scene.background)
     }
 
-    if (entities) {
-      Object.entries(entities).forEach(([name, entity]) => {
-        this._createEntity(name, entity)
-      })
-    }
+    this._createOrUpdateGameObjects(this.state)
 
     // setup input handlers
     const keyboardEvents = {
@@ -179,6 +175,7 @@ class BearHug extends Phaser.Scene {
       this.input.keyboard.on(event, ({ keyCode }) => {
         const newState = handler(keyCode, this.state)
         this._updateState(newState, `${event} handler`)
+        this._createOrUpdateGameObjects(newState)
       })
     })
 
@@ -209,6 +206,7 @@ class BearHug extends Phaser.Scene {
     const updatedEntities = Object.fromEntries(
       Object
         .entries(this.state.entities)
+        .filter(([name, _]) => this.objects.entities[name])
         .map(([name, entity]) => {
           const object = this.objects.entities[name]
 
@@ -224,8 +222,14 @@ class BearHug extends Phaser.Scene {
     // next, call the user's update function to get the changed state
     const state = this.onUpdate(this.state, time, delta)
 
-    // finally, update state again with the user's updates
-    this._updateState(state, 'update function')
+    // update state again with the user's updates
+    this._updateState(state, 'update function - end')
+
+    // reflect changes in state in game objects
+    this._createOrUpdateGameObjects(state)
+
+    // finally, clean up any orphaned game objects
+    this._cleanUpOrphanedGameObjects(state)
   }
 
   /**
@@ -285,14 +289,14 @@ class BearHug extends Phaser.Scene {
    * @param {string} name
    * @param {Entity} entity 
    */
-  _createEntity(name, entity) {
+  _createObject(name, entity) {
     const createContainer = (object = null) => {
       if (object && entity.components.length === 0) {
         return object
       }
 
       const children = entity.components.length > 0
-        ? entity.components.map(c => this._createEntity(c.name, c))
+        ? entity.components.map(c => this._createObject(c.name, c))
         : []
 
       return this.add.container(
@@ -332,6 +336,26 @@ class BearHug extends Phaser.Scene {
     ])
 
     const container = pipe(createObject, createContainer)(entity)
+
+    // when the object is destroyed, update state to remove entity
+    container.on('destroy', () => {
+      const [name, _] = Object.entries(this.objects.entities)
+        .find(([_, object]) => object === container) || []
+
+      if (name) {
+        const isNotDestroyedEntity = (_, key) => key !== name
+
+        this._updateState({
+          ...this.state,
+          entities: pickBy(isNotDestroyedEntity, this.state.entities)
+        })
+
+        this.objects = {
+          ...this.objects,
+          entities: pickBy(isNotDestroyedEntity, this.objects.entities)
+        }
+      }
+    })
 
     if (entity.timeToLive !== Infinity) {
       this.time.addEvent({
@@ -377,18 +401,38 @@ class BearHug extends Phaser.Scene {
     this.state = state
     this.history.push(state)
 
-    // reflect state change in game objects
+    if (this.history.length > MAX_HISTORY_SIZE) {
+      this.history.shift()
+    }
+  }
+
+  /** @param {GameState} state */
+  _createOrUpdateGameObjects(state) {
     Object.entries(state.entities).forEach(([name, entity]) => {
       const object = this.objects.entities[name]
 
       if (object) {
         this._updateObject(object, entity)
+      } else {
+        this._createObject(name, entity)
       }
     })
+  }
 
-    if (this.history.length > MAX_HISTORY_SIZE) {
-      this.history.shift()
-    }
+  /** @param {GameState} state */
+  _cleanUpOrphanedGameObjects(state) {
+    const separateOrphans = pipe(
+      Object.entries,
+      partition(([key, _]) => state.entities[key])
+    )
+
+    const [toKeep, toDitch] = separateOrphans(this.objects.entities)
+
+    toDitch.forEach(([_, object]) => {
+      object.destroy()
+    })
+
+    this.objects.entities = Object.fromEntries(toKeep)
   }
 }
 
