@@ -322,7 +322,7 @@ class BearHug extends Phaser.Scene {
         fontFamily: entity.fontFamily,
         fontSize: entity.fontSize,
         color: entity.colour
-      })
+      }).setDepth(entity.z).setAngle(entity.angle)
     }
 
     const createObject = cond([
