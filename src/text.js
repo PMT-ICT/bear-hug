@@ -1,4 +1,4 @@
-import { Entity } from './entity'
+import { Entity, EntityOptions } from './entity'
 import { Colour } from './colour'
 
 export const Font = {
@@ -13,35 +13,25 @@ const isValidFont = font => Object.values(Font).includes(font)
 
 /**
  * @typedef {Object} TextOptions
- * @property {number} angle 
  * @property {string} colour
- * @property {Array<Entity>} components
  * @property {string} fontFamily
  * @property {string} fontSize
- * @property {boolean} isStatic
- * @property {number} x
- * @property {number} y
  */
 
 export class Text extends Entity {
   /**
    * @param {string} name
    * @param {string} content
-   * @param {TextOptions} options
+   * @param {EntityOptions & TextOptions} options
    */
-  constructor(name, content, options = {}) {
+  constructor(name, x, y, content, options = {}) {
+    super(name, x, y, 'text', options)
+    
     const {
-      angle = 0,
       colour = Colour.BLACK,
-      components = [],
       fontFamily = Font.MINECRAFT,
       fontSize = 24,
-      isStatic = true,
-      x = 0,
-      y = 0,
     } = options
-
-    super(name, x, y, components, isStatic, 'text', angle)
 
     if (fontFamily && !isValidFont(fontFamily)) {
       const validFonts = Object.values(Font).join(', ')
@@ -52,6 +42,5 @@ export class Text extends Entity {
     this.fontFamily = fontFamily
     this.fontSize = fontSize
     this.colour = colour
-    this.isStatic = isStatic
   }
 }
