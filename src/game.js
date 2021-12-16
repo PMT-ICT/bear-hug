@@ -333,6 +333,14 @@ class BearHug extends Phaser.Scene {
 
     const container = pipe(createObject, createContainer)(entity)
 
+    if (entity.timeToLive !== Infinity) {
+      this.time.addEvent({
+        delay: entity.timeToLive,
+        callback: container.destroy,
+        callbackScope: container
+      })
+    }
+
     if (entity.isRoot) {
       if (!entity.isStatic) {
         const bounds = container.getBounds()
