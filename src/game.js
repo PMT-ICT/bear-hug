@@ -113,13 +113,16 @@ class BearHug extends Phaser.Scene {
     /** @type {Array<GameState>} */
     this.history = []
 
+    if (!functions.setup) {
+      throw Error('Missing required function: setup')
+    }
+
     this.setup = functions.setup
-    this.onUpdate = functions.update
-    this.stopWhen = functions.stopWhen
-    this.onKeyDown = functions.onKeyDown
-    this.onKeyUp = functions.onKeyUp
-    this.onMouseDown = functions.onMouseDown
-    this.onMouseUp = functions.onMouseUp
+    this.onUpdate = functions.update || (state => state)
+    this.onKeyDown = functions.onKeyDown || ((key, state) => state)
+    this.onKeyUp = functions.onKeyUp || ((key, state) => state)
+    this.onMouseDown = functions.onMouseDown || ((btn, coordinates, state) => state)
+    this.onMouseUp = functions.onMouseUp || ((btn, coordinates, state) => state)
 
     this.objects = {
       camera: undefined,
