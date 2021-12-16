@@ -21,6 +21,8 @@ const isValidFont = font => Object.values(Font).includes(font)
 export class Text extends Entity {
   /**
    * @param {string} name
+   * @param {number} x
+   * @param {number} y
    * @param {string} content
    * @param {EntityOptions & TextOptions} options
    */
