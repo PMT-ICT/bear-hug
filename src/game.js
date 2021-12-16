@@ -301,7 +301,7 @@ class BearHug extends Phaser.Scene {
 
       return this.add.container(
         entity.x, entity.y, object ? [object, ...children] : children
-      )
+      ).setData('name', entity.name)
     }
 
     const createShape = () => {
@@ -416,6 +416,8 @@ class BearHug extends Phaser.Scene {
       } else {
         this._createObject(name, entity)
       }
+
+      // TODO: create function that recursively creates objects for newly added components
     })
   }
 
