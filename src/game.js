@@ -292,7 +292,7 @@ class BearHug extends Phaser.Scene {
   _createObject(name, entity) {
     const createContainer = (object = null) => {
       if (object && entity.components.length === 0) {
-        return object
+        return object.setData('name', entity.name)
       }
 
       const children = entity.components.length > 0
