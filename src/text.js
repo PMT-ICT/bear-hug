@@ -27,13 +27,14 @@ export class Text extends Entity {
    * @param {EntityOptions & TextOptions} options
    */
   constructor(name, x, y, content, options = {}) {
-    super(name, x, y, 'text', options)
-    
     const {
       colour = Colour.BLACK,
       fontFamily = Font.MINECRAFT,
       fontSize = 24,
+      isStatic = true
     } = options
+
+    super(name, x, y, 'text', { ...options, isStatic })
 
     if (fontFamily && !isValidFont(fontFamily)) {
       const validFonts = Object.values(Font).join(', ')
