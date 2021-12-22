@@ -33,10 +33,8 @@ export class Entity {
    * @param {string} name
    * @param {number} x
    * @param {number} y
-   * @param {Array<Entity>} components
-   * @param {boolean} isStatic
-   * @param {number} angle
-   * @param {('container' |'shape' | 'text')} type
+   * @param {('container' | 'shape' | 'text')} type
+   * @param {EntityOptions} options
    */
   constructor(name, x, y, type, options = {}) {
     this[immerable] = true
@@ -55,6 +53,7 @@ export class Entity {
       isStatic = false,
       timeToLive = Infinity
     } = options
+
     this.angle = angle
     this.components = components
     this.isStatic = isStatic
@@ -78,7 +77,6 @@ export class Container extends Entity {
    * @param {string} name
    * @param {number} x
    * @param {number} y
-   * @param {Array<Entity>} components
    * @param {EntityOptions} options
    */
   constructor(name, x, y, options = {}) {
