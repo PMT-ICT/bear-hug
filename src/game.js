@@ -1,7 +1,9 @@
+const path = require('path')
+
 import { enableES5, produce, setAutoFreeze } from 'immer'
 import { cond, partition, pickBy, pipe } from 'lodash/fp'
 import Phaser from 'phaser'
-import { Font } from '.'
+import { Colour, Font } from '.'
 
 import { Entity, Shape } from './entity'
 import { otherwise } from './funfunfun'
@@ -9,7 +11,7 @@ import { Text } from './text'
 
 /**
  * @typedef {Object} Scene
- * @property {string} background Background colour of the scene, as a hexadecimal string. Use a colourpicker!
+ * @property {string} background Either a colour (hexadecimal string) or an image (relative path).
  */
 
 
@@ -97,6 +99,9 @@ import { Text } from './text'
 
 const MAX_HISTORY_SIZE = 30 * 10
 
+/** @param {string} string */
+const isColour = string => /^#[0-9A-F]{6}$/i.test(string)
+
 class BearHug extends Phaser.Scene {
   /**
    * @param {GameFunctions} functions
@@ -127,6 +132,7 @@ class BearHug extends Phaser.Scene {
 
     this.objects = {
       camera: undefined,
+      backgroundImage: undefined,
       entities: {}
     }
   }
@@ -141,26 +147,59 @@ class BearHug extends Phaser.Scene {
 
   preload() {
     // any assets that need to be preloaded go here
-  }
-
-  create() {
     const initialState = this.setup(this.state)
 
     this._updateState(initialState, 'setup function')
 
+    const { scene: { background = Colour.WHITE } } = this.state
+
+    if (background && !isColour(background)) {
+      try {
+        this.load.image('background', `/assets/${background}`)
+      } catch {
+        throw Error(`Invalid background image: ${background}`)
+      }
+    }
+  }
+
+  create() {
     this.objects.camera = this.cameras.add(
       0, 0, window.innerWidth, window.innerHeight
     )
 
-    this.scale.on('resize', function ({ width, height }) {
-      this.cameras.resize(width, height)
-    }, this)
-
-    const { scene } = initialState
+    const { scene } = this.state
 
     if (scene.background) {
-      this.objects.camera.setBackgroundColor(scene.background)
+      const isColour = /^#[0-9A-F]{6}$/i.test(scene.background)
+
+      if (isColour) {
+        this.objects.camera.setBackgroundColor(scene.background)
+      } else {
+        this.objects.camera.setBackgroundColor(Colour.WHITE)
+
+        this.objects.backgroundImage = this.add.image(0, 0, 'background')
+          // TODO: make alpha an option for the user
+          .setAlpha(0.8)
+          .setDisplaySize(window.innerWidth, window.innerHeight)
+          .setDisplayOrigin(0, 0)
+      }
     }
+
+
+    this.scale.on('resize', function ({ width, height }) {
+      this.cameras.resize(width, height)
+
+      const background = this.objects.backgroundImage
+
+      if (background) {
+        // TODO: resize correctly depending on window size
+        background
+          .setDisplaySize(width, height)
+          .setDisplayOrigin(0, 0)
+      }
+
+    }, this)
+
 
     this._createOrUpdateGameObjects(this.state)
 
