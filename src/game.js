@@ -23,6 +23,7 @@ import { Text } from './text'
 
 /**
  * @callback setup
+ * @param {GameState} state
  * @returns {GameState}
  */
 
@@ -86,11 +87,11 @@ import { Text } from './text'
 /**
  * @typedef {Object} GameFunctions
  * @property {setup} setup
- * @property {update} update
- * @property {onKeyDown} onKeyDown
- * @property {onKeyUp} onKeyUp
- * @property {onMouseDown} onMouseDown
- * @property {onMouseUp} onMouseUp
+ * @property {update} [update]
+ * @property {onKeyDown} [onKeyDown]
+ * @property {onKeyUp} [onKeyUp]
+ * @property {onMouseDown} [onMouseDown]
+ * @property {onMouseUp} [onMouseUp]
  */
 
 
@@ -196,6 +197,7 @@ class BearHug extends Phaser.Scene {
         const newState = handler(pointer.button, coordinates, this.state)
 
         this._updateState(newState, `${event} handler`)
+        this._createOrUpdateGameObjects(newState)
       })
     })
   }
@@ -292,16 +294,25 @@ class BearHug extends Phaser.Scene {
   _createObject(name, entity) {
     const createContainer = (object = null) => {
       if (object && entity.components.length === 0) {
-        return object.setData('name', entity.name)
+        return object
       }
 
-      const children = entity.components.length > 0
-        ? entity.components.map(c => this._createObject(c.name, c))
-        : []
+      const children = entity.components.map(c => this._createObject(c.name, c))
+      const container = this.add.container(entity.x, entity.y)
 
-      return this.add.container(
-        entity.x, entity.y, object ? [object, ...children] : children
-      ).setData('name', entity.name)
+      if (object) {
+        object.x = 0
+        object.y = 0
+        container.add(object)
+
+        const childContainer = this.add.container(0, 0)
+        childContainer.add(children)
+        container.add(childContainer)
+      } else {
+        container.add(children)
+      }
+
+      return container
     }
 
     const createShape = () => {
@@ -329,18 +340,18 @@ class BearHug extends Phaser.Scene {
       }).setDepth(entity.z).setAngle(entity.angle)
     }
 
-    const createObject = cond([
+    const createGameObject = cond([
       [entity => entity instanceof Shape, createShape],
       [entity => entity instanceof Text, createText],
       [otherwise, () => null]
     ])
 
-    const container = pipe(createObject, createContainer)(entity)
+    const gameObject = pipe(createGameObject, createContainer)(entity)
 
     // when the object is destroyed, update state to remove entity
-    container.on('destroy', () => {
+    gameObject.on('destroy', () => {
       const [name, _] = Object.entries(this.objects.entities)
-        .find(([_, object]) => object === container) || []
+        .find(([_, object]) => object === gameObject) || []
 
       if (name) {
         const isNotDestroyedEntity = (_, key) => key !== name
@@ -360,31 +371,31 @@ class BearHug extends Phaser.Scene {
     if (entity.timeToLive !== Infinity) {
       this.time.addEvent({
         delay: entity.timeToLive,
-        callback: container.destroy,
-        callbackScope: container
+        callback: gameObject.destroy,
+        callbackScope: gameObject
       })
     }
 
     if (entity.isRoot) {
       if (!entity.isStatic) {
-        const bounds = container.getBounds()
-        container.setSize(bounds.width, bounds.height)
+        const bounds = gameObject.getBounds()
+        gameObject.setSize(bounds.width, bounds.height)
 
-        this.physics.world.enable(container)
+        this.physics.world.enable(gameObject)
 
-        const xOffset = bounds.x - container.body.x
-        const yOffset = bounds.y - container.body.y
+        const xOffset = bounds.x - gameObject.body.x
+        const yOffset = bounds.y - gameObject.body.y
 
-        container.body
+        gameObject.body
           .setOffset(xOffset, yOffset)
           .setCollideWorldBounds(true)
           .setAllowGravity(true)
       }
 
-      this.objects.entities[name] = container
+      this.objects.entities[name] = gameObject
     }
 
-    return container
+    return gameObject
   }
 
   /**
