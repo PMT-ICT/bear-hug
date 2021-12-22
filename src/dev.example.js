@@ -1,3 +1,5 @@
-const app = require('./index')
+const bearHug = require('./index')
 
-// do stuff
+bearHug.commence({
+  setup: state => state
+})
