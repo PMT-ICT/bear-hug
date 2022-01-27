@@ -296,14 +296,43 @@ class BearHug extends Phaser.Scene {
       ? object.setText(entity.content)
       : object
 
+    /** @param { Phaser.GameObjects.GameObject } object */
+    const updateColour = object => {
+      if (entity.colour && object instanceof Phaser.GameObjects.Shape) {
+        const colour =  Phaser.Display.Color.ValueToColor(entity.colour).color
+        
+        if (object.fillColor !== colour) {
+          object.setFillStyle(colour)
+        }
+
+      }
+    }
+
     const update = pipe(
       updatePosition,
       updateVelocity,
       updateAngle,
-      updateText
+      updateText,
+      updateColour
     )
 
     update(object)
+
+    const allObjects = object => object instanceof Phaser.GameObjects.Container
+      ? object.getAll().flatMap(allObjects)
+      : [object]
+
+    if (object instanceof Phaser.GameObjects.Container) {
+      const all = allObjects(object)
+
+      entity.components.forEach(component => {
+        const componentObject = all.find(object => object.name == component.name)
+
+        if (componentObject) {
+          this._updateObject(componentObject, component)
+        }
+      })
+    }
   }
 
   /**
@@ -364,10 +393,12 @@ class BearHug extends Phaser.Scene {
           return this.add.circle(x, y, entity.radius, color)
             .setDepth(entity.z)
             .setAngle(entity.angle)
+            .setName(entity.name)
         case 'rectangle':
           return this.add.rectangle(x, y, entity.width, entity.height, color)
             .setDepth(entity.z)
             .setAngle(entity.angle)
+            .setName(entity.name)
       }
     }
 
@@ -458,6 +489,8 @@ class BearHug extends Phaser.Scene {
 
   /** @param {GameState} state */
   _createOrUpdateGameObjects(state) {
+    
+
     Object.entries(state.entities).forEach(([name, entity]) => {
       const object = this.objects.entities[name]
 
